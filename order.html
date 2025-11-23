@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Order</title>
+    <link rel="stylesheet" href="data/vendors/bootstrap/css/bootstrap.min.css">
+</head>
+<body class="bg-light p-4">
+    <div class="container">
+        <div class="card shadow p-4">
+            <h2 class="mb-4">Checkout Order</h2>
+
+            <form id="orderForm">
+                <div class="mb-3">
+                    <label class="form-label">Nama Customer</label>
+                    <input type="text" id="nama" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nomor WhatsApp</label>
+                    <input type="text" id="wa" class="form-control" required>
+                </div>
+
+                <h4 class="mt-4">Detail Pesanan</h4>
+                <ul id="orderList" class="list-group mb-3"></ul>
+                <p>Total: <strong id="orderTotal">Rp. 0</strong></p>
+
+                <button type="button" class="btn btn-success w-100" id="sendWA">Kirim Order via WhatsApp</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+// AMBIL CART DARI LOCAL STORAGE
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function loadOrder() {
+    const list = document.getElementById("orderList");
+    const total = document.getElementById("orderTotal");
+    let sum = 0;
+
+    list.innerHTML = "";
+
+    cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        sum += subtotal;
+
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+
+        li.innerHTML = `
+            <div>
+                <strong>${item.name}</strong><br>
+                <small>Harga: Rp ${item.price.toLocaleString()} × ${item.qty}</small>
+            </div>
+            <span>Rp ${subtotal.toLocaleString()}</span>
+        `;
+
+        list.appendChild(li);
+    });
+
+    total.textContent = "Rp. " + sum.toLocaleString();
+}
+
+document.addEventListener("DOMContentLoaded", loadOrder);
+
+// =====================================
+// KIRIM DATA KE WHATSAPP (FIX QTY)
+// =====================================
+document.getElementById("sendWA").addEventListener("click", () => {
+    const nama = document.getElementById("nama").value;
+    const wa = document.getElementById("wa").value;
+
+    if (!nama || !wa) {
+        alert("Lengkapi form terlebih dahulu!");
+        return;
+    }
+
+    let pesan = `Halo, saya ingin pesan:%0A`;
+
+    let total = 0;
+
+    cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        pesan += `- ${item.name} (${item.qty}x): Rp ${subtotal.toLocaleString()}%0A`;
+    });
+
+    pesan += `%0ATotal: Rp ${total.toLocaleString()}%0A%0A`;
+    pesan += `Nama: ${nama}%0ANo WA: ${wa}`;
+
+    window.open(`https://wa.me/62${wa}?text=${pesan}`, "_blank");
+});
+</script>
